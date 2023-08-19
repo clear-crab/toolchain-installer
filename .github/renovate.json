@@ -7,7 +7,8 @@
         "dependencies"
     ],
     "lockFileMaintenance": {
-        "enabled": true
+        "enabled": true,
+        "automerge": true
     },
     "prCreation": "not-pending",
     "rangeStrategy": "replace",
@@ -16,5 +17,28 @@
         "fileMatch": [
             "^ci\\/.*/[^/]+\\.ya?ml$"
         ]
-    }
+    },
+    "packageRules": [
+        {
+            "matchPackagePatterns": [
+                "opentelemetry"
+            ],
+            "groupName": "opentelemetry"
+        },
+        {
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "automerge": true
+        },
+        {
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "matchCurrentVersion": "/^0\\./",
+            "automerge": true
+        }
+    ]
 }

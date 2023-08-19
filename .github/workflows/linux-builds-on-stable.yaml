@@ -44,6 +44,7 @@ jobs:
           - i686-linux-android            # skip-pr skip-master
           - x86_64-linux-android          # skip-pr skip-master
           - riscv64gc-unknown-linux-gnu   # skip-pr skip-master
+          - loongarch64-unknown-linux-gnu # skip-pr skip-master
         include:
           - target: x86_64-unknown-linux-gnu
             run_tests: YES
@@ -121,10 +122,6 @@ jobs:
           echo "DOCKER=$DOCKER" >> $GITHUB_ENV
       - name: Fetch the docker
         run: bash ci/fetch-rust-docker.bash "${TARGET}"
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
       - name: Maybe build a docker from there
         run: |
           if [ -f "ci/docker/$DOCKER/Dockerfile" ]; then
