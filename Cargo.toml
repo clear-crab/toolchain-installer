@@ -83,7 +83,7 @@ termcolor.workspace = true
 thiserror.workspace = true
 threadpool = "1"
 tokio = { workspace = true, optional = true }
-toml = "0.7"
+toml = "0.8"
 tracing-opentelemetry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true, features = [
     "env-filter",
@@ -113,7 +113,7 @@ version = "1.1.0"
 
 [target."cfg(windows)".dependencies]
 cc = "1"
-winreg = "0.50"
+winreg = "0.51"
 
 [target."cfg(windows)".dependencies.winapi]
 features = [

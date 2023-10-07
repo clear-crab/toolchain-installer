@@ -29,8 +29,37 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain nightly
 ```
 
-If you prefer you can directly download `rustup-init` for the platform of your
-choice:
+
+## Using a package manager
+
+> Please note that the rustup project is not maintaining any package mentioned in this section.
+> If you have encountered any problems installing `rustup` with a package manager,
+> please contact the package maintainer(s) for further information.
+
+### Homebrew
+
+You can use `brew` to install `rustup-init`[^not-rust]:
+
+```sh
+$ brew install rustup-init
+```
+
+Then execute `rustup-init` to proceed with the installation.
+
+When the installation is complete,
+make sure that `$HOME/.cargo/bin` is in your `$PATH`,
+and you should be able to use `rustup` normally.
+
+[^not-rust]: This is not to be confused with the `rust` package,
+which is a `brew`-managed `rust` toolchain installation.
+
+## Manual installation
+
+You can manually download `rustup-init` for a given target from
+`https://static.rust-lang.org/rustup/dist/{target-triple}/rustup-init[.exe]`[^msvc].
+
+<details>
+<summary>Direct links</summary>
 
 - [aarch64-apple-darwin](https://static.rust-lang.org/rustup/dist/aarch64-apple-darwin/rustup-init)
   - [sha256 file](https://static.rust-lang.org/rustup/dist/aarch64-apple-darwin/rustup-init.sha256)
@@ -95,6 +124,13 @@ choice:
 - [x86_64-unknown-netbsd](https://static.rust-lang.org/rustup/dist/x86_64-unknown-netbsd/rustup-init)
   - [sha256 file](https://static.rust-lang.org/rustup/dist/x86_64-unknown-netbsd/rustup-init.sha256)
 
+</details>
+
+To get a previous version, use
+`https://static.rust-lang.org/rustup/archive/{rustup-version}/{target-triple}/rustup-init[.exe]`.
+
+SHA-256 checksums are also available by appending `.sha256` to the link.
+
 [^msvc]: MSVC builds of `rustup` additionally require an [installation of
     Visual Studio 2019 or the Visual C++ Build Tools 2019][vs]. For Visual
     Studio, make sure to check the "C++ tools" and "Windows 10 SDK" option. No
@@ -103,8 +139,7 @@ choice:
 
 [vs]: https://visualstudio.microsoft.com/downloads/
 
-You can fetch an older version from
-`https://static.rust-lang.org/rustup/archive/{rustup-version}/{target-triple}/rustup-init[.exe]`
+## Self-compiled installation
 
 To install `rustup` from source, check out the git repository from
 <https://github.com/rust-lang/rustup> and run `cargo run --release`. Note that
