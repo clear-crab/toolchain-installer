@@ -71,7 +71,12 @@ pub(crate) fn cargo_home_str() -> Result<Cow<'static, str>> {
 // TODO?: Make a decision on Ion Shell, Power Shell, Nushell
 // Cross-platform non-POSIX shells have not been assessed for integration yet
 fn enumerate_shells() -> Vec<Shell> {
-    vec![Box::new(Posix), Box::new(Bash), Box::new(Zsh)]
+    vec![
+        Box::new(Posix),
+        Box::new(Bash),
+        Box::new(Zsh),
+        Box::new(Fish),
+    ]
 }
 
 pub(crate) fn get_available_shells() -> impl Iterator<Item = Shell> {
@@ -198,6 +203,48 @@ impl UnixShell for Zsh {
             .chain(self.rcfiles())
             .take(1)
             .collect()
+    }
+}
+
+struct Fish;
+
+impl UnixShell for Fish {
+    fn does_exist(&self) -> bool {
+        // fish has to either be the shell or be callable for fish setup.
+        matches!(process().var("SHELL"), Ok(sh) if sh.contains("fish"))
+            || utils::find_cmd(&["fish"]).is_some()
+    }
+
+    // > "$XDG_CONFIG_HOME/fish/conf.d" (or "~/.config/fish/conf.d" if that variable is unset) for the user
+    // from <https://github.com/fish-shell/fish-shell/issues/3170#issuecomment-228311857>
+    fn rcfiles(&self) -> Vec<PathBuf> {
+        let p0 = process().var("XDG_CONFIG_HOME").ok().map(|p| {
+            let mut path = PathBuf::from(p);
+            path.push("fish/conf.d/rustup.fish");
+            path
+        });
+
+        let p1 = utils::home_dir().map(|mut path| {
+            path.push(".config/fish/conf.d/rustup.fish");
+            path
+        });
+
+        p0.into_iter().chain(p1).collect()
+    }
+
+    fn update_rcs(&self) -> Vec<PathBuf> {
+        self.rcfiles()
+    }
+
+    fn env_script(&self) -> ShellScript {
+        ShellScript {
+            name: "env.fish",
+            content: include_str!("env.fish"),
+        }
+    }
+
+    fn source_string(&self) -> Result<String> {
+        Ok(format!(r#". "{}/env.fish""#, cargo_home_str()?))
     }
 }
 

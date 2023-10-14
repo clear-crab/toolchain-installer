@@ -216,23 +216,31 @@ but will not be added automatically."
 }
 
 #[cfg(not(windows))]
+macro_rules! post_install_msg_unix_source_env {
+    () => {
+        r#"To configure your current shell, you need to source
+the corresponding `env` file under {cargo_home}.
+
+This is usually done by running one of the following (note the leading DOT):
+    . "{cargo_home}/env"            # For sh/bash/zsh/ash/dash/pdksh
+    source "{cargo_home}/env.fish"  # For fish
+"#
+    };
+}
+
+#[cfg(not(windows))]
 macro_rules! post_install_msg_unix {
     () => {
-        r#"# Rust is installed now. Great!
+        concat!(
+            r"# Rust is installed now. Great!
 
 To get started you may need to restart your current shell.
 This would reload your `PATH` environment variable to include
 Cargo's bin directory ({cargo_home}/bin).
 
-To configure your current shell, you need to source
-the `env` file ({cargo_home}/env).
-
-This is usually done by running:
-    source "{cargo_home}/env"
-
-The `source` command above might need to be replaced with `.`
-on shells like `ash`, `dash` and `pdksh`.
-"#
+",
+            post_install_msg_unix_source_env!(),
+        )
     };
 }
 
@@ -252,20 +260,15 @@ Cargo's bin directory ({cargo_home}\\bin).
 #[cfg(not(windows))]
 macro_rules! post_install_msg_unix_no_modify_path {
     () => {
-        r#"# Rust is installed now. Great!
+        concat!(
+            r"# Rust is installed now. Great!
 
 To get started you need Cargo's bin directory ({cargo_home}/bin) in your `PATH`
 environment variable. This has not been done automatically.
 
-To configure your current shell, you need to source
-the `env` file ({cargo_home}/env).
-
-This is usually done by running:
-    source "{cargo_home}/env"
-
-The `source` command above might need to be replaced with `.`
-on shells like `ash`, `dash` and `pdksh`.
-"#
+",
+            post_install_msg_unix_source_env!(),
+        )
     };
 }
 
