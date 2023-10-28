@@ -1035,6 +1035,27 @@ fn update_unavailable_std() {
 }
 
 #[test]
+fn add_missing_component() {
+    setup(&|config| {
+        make_component_unavailable(config, "rls-preview", &this_host_triple());
+        config.expect_ok(&["rustup", "toolchain", "add", "nightly"]);
+        config.expect_err(
+            &["rustup", "component", "add", "rls-preview"],
+            for_host!(
+                "component 'rls' for target '{0}' is unavailable for download for channel 'nightly'\n\
+                Sometimes not all components are available in any given nightly."
+            ),
+        );
+        // Make sure the following pattern does not match,
+        // thus addressing https://github.com/rust-lang/rustup/issues/3418.
+        config.expect_not_stderr_err(
+            &["rustup", "component", "add", "rls-preview"],
+            "If you don't need the component, you can remove it with:",
+        );
+    });
+}
+
+#[test]
 fn add_missing_component_toolchain() {
     setup(&|config| {
         make_component_unavailable(config, "rust-std", &this_host_triple());
@@ -1044,7 +1065,18 @@ fn add_missing_component_toolchain() {
                 r"component 'rust-std' for target '{0}' is unavailable for download for channel 'nightly'
 Sometimes not all components are available in any given nightly. If you don't need the component, you could try a minimal installation with:
 
-    rustup toolchain add nightly --profile minimal"
+    rustup toolchain add nightly --profile minimal
+
+If you require these components, please install and use the latest successful build version,
+which you can find at <https://rust-lang.github.io/rustup-components-history>.
+
+After determining the correct date, install it with a command such as:
+
+    rustup toolchain install nightly-2018-12-27
+
+Then you can use the toolchain with commands such as:
+
+    cargo +nightly-2018-12-27 build"
             ),
         );
     });
