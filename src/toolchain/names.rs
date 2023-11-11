@@ -308,38 +308,29 @@ impl Display for ToolchainName {
     }
 }
 
+/// Sorts [`ToolchainName`]s in the following order:
+/// 1. `stable`/`beta`/`nightly`-prefixed names, in this exact order.
+/// 2. `X.Y.Z-suffix` names, sorted by semver rules on `X.Y.Z`, then by `suffix`.
+/// 3. Other names, sorted alphanumerically.
 pub(crate) fn toolchain_sort(v: &mut [ToolchainName]) {
-    use semver::{BuildMetadata, Prerelease, Version};
-
-    fn special_version(ord: u64, s: &str) -> Version {
-        Version {
-            major: 0,
-            minor: 0,
-            patch: 0,
-            pre: Prerelease::new(&format!("pre.{}.{}", ord, s.replace('_', "-"))).unwrap(),
-            build: BuildMetadata::EMPTY,
-        }
-    }
-
-    fn toolchain_sort_key(s: &str) -> Version {
+    v.sort_by_key(|name| {
+        let s = name.to_string();
         if s.starts_with("stable") {
-            special_version(0, s)
-        } else if s.starts_with("beta") {
-            special_version(1, s)
-        } else if s.starts_with("nightly") {
-            special_version(2, s)
-        } else {
-            Version::parse(&s.replace('_', "-")).unwrap_or_else(|_| special_version(3, s))
+            return (0, None, s);
         }
-    }
-
-    v.sort_by(|a, b| {
-        let a_str = &format!("{a}");
-        let b_str = &format!("{b}");
-        let a_key = toolchain_sort_key(a_str);
-        let b_key = toolchain_sort_key(b_str);
-        a_key.cmp(&b_key)
-    });
+        if s.starts_with("beta") {
+            return (1, None, s);
+        }
+        if s.starts_with("nightly") {
+            return (2, None, s);
+        }
+        if let Some((ver_str, suffix)) = s.split_once('-') {
+            if let Ok(ver) = semver::Version::parse(ver_str) {
+                return (3, Some(ver), suffix.to_owned());
+            }
+        }
+        (4, None, s)
+    })
 }
 
 /// ResolvableLocalToolchainName is used to process values set in
@@ -675,6 +666,9 @@ mod tests {
             "1.2.0-x86_64-unknown-linux-gnu",
             "1.8.0-x86_64-unknown-linux-gnu",
             "1.10.0-x86_64-unknown-linux-gnu",
+            "bar(baz)",
+            "foo#bar",
+            "this.is.not-a+semver",
         ]
         .into_iter()
         .map(|s| ToolchainName::try_from(s).unwrap())
@@ -688,6 +682,10 @@ mod tests {
             "1.10.0-x86_64-unknown-linux-gnu",
             "beta-x86_64-unknown-linux-gnu",
             "1.2.0-x86_64-unknown-linux-gnu",
+            // https://github.com/rust-lang/rustup/issues/3517
+            "foo#bar",
+            "bar(baz)",
+            "this.is.not-a+semver",
         ]
         .into_iter()
         .map(|s| ToolchainName::try_from(s).unwrap())

@@ -15,7 +15,10 @@
 
 use anyhow::{anyhow, Result};
 use cfg_if::cfg_if;
-use rs_tracing::*;
+// Public macros require availability of the internal symbols
+use rs_tracing::{
+    close_trace_file, close_trace_file_internal, open_trace_file, trace_to_file_internal,
+};
 
 use rustup::cli::common;
 use rustup::cli::proxy_mode;
@@ -51,13 +54,13 @@ fn maybe_trace_rustup() -> Result<utils::ExitCode> {
     {
         use std::time::Duration;
 
-        use opentelemetry::sdk::{
+        use opentelemetry::{global, KeyValue};
+        use opentelemetry_otlp::WithExportConfig;
+        use opentelemetry_sdk::{
+            propagation::TraceContextPropagator,
             trace::{self, Sampler},
             Resource,
         };
-        use opentelemetry::KeyValue;
-        use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
-        use opentelemetry_otlp::WithExportConfig;
         use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
         // Background submission requires a runtime, and since we're probably
@@ -81,7 +84,7 @@ fn maybe_trace_rustup() -> Result<utils::ExitCode> {
                             "rustup",
                         )])),
                 )
-                .install_batch(opentelemetry::runtime::Tokio)?;
+                .install_batch(opentelemetry_sdk::runtime::Tokio)?;
             let env_filter = EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("INFO"));
             let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
             let subscriber = Registry::default().with(env_filter).with(telemetry);

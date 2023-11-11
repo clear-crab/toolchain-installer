@@ -1,17 +1,15 @@
 [package]
-
-authors = ["Brian Anderson <banderson@mozilla.com>"]
-edition = "2021"
-license = "MIT OR Apache-2.0"
 name = "download"
 version = "1.26.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [features]
 
 default = ["reqwest-backend", "reqwest-rustls-tls", "reqwest-default-tls"]
 
 curl-backend = ["curl"]
-reqwest-backend = ["reqwest", "env_proxy", "lazy_static"]
+reqwest-backend = ["reqwest", "env_proxy"]
 reqwest-default-tls = ["reqwest/default-tls"]
 reqwest-rustls-tls = ["reqwest/rustls-tls-native-roots"]
 
@@ -19,19 +17,12 @@ reqwest-rustls-tls = ["reqwest/rustls-tls-native-roots"]
 anyhow.workspace = true
 curl = { version = "0.4.44", optional = true }
 env_proxy = { version = "0.4.1", optional = true }
-lazy_static = { workspace = true, optional = true }
-reqwest = { version = "0.11", default-features = false, features = [
-    "blocking",
-    "gzip",
-    "socks",
-], optional = true }
+once_cell.workspace = true
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "gzip", "socks"], optional = true }
 thiserror.workspace = true
 url.workspace = true
 
 [dev-dependencies]
-hyper = { version = "0.14", default-features = false, features = [
-    "tcp",
-    "server",
-] }
+hyper = { version = "0.14", default-features = false, features = ["tcp", "server"] }
 tempfile.workspace = true
 tokio = { workspace = true, default-features = false, features = ["sync"] }
