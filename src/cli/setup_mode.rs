@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{builder::PossibleValuesParser, Arg, ArgAction, Command};
+use clap::{builder::PossibleValuesParser, value_parser, Arg, ArgAction, Command};
 
 use crate::{
     cli::{
@@ -9,12 +9,14 @@ use crate::{
     currentprocess::{argsource::ArgSource, filesource::StdoutSource},
     dist::dist::Profile,
     process,
-    toolchain::names::{maybe_official_toolchainame_parser, MaybeOfficialToolchainName},
+    toolchain::names::MaybeOfficialToolchainName,
     utils::utils,
 };
 
 #[cfg_attr(feature = "otel", tracing::instrument)]
 pub fn main() -> Result<utils::ExitCode> {
+    use clap::error::ErrorKind;
+
     let args: Vec<_> = process().args().collect();
     let arg1 = args.get(1).map(|a| &**a);
 
@@ -66,7 +68,7 @@ pub fn main() -> Result<utils::ExitCode> {
                 .long("default-toolchain")
                 .num_args(1)
                 .help("Choose a default toolchain to install. Use 'none' to not install any toolchains at all")
-                .value_parser(maybe_official_toolchainame_parser)
+                .value_parser(value_parser!(MaybeOfficialToolchainName))
         )
         .arg(
             Arg::new("profile")
@@ -107,10 +109,7 @@ pub fn main() -> Result<utils::ExitCode> {
 
     let matches = match cli.try_get_matches_from(process().args_os()) {
         Ok(matches) => matches,
-        Err(e)
-            if e.kind() == clap::error::ErrorKind::DisplayHelp
-                || e.kind() == clap::error::ErrorKind::DisplayVersion =>
-        {
+        Err(e) if [ErrorKind::DisplayHelp, ErrorKind::DisplayVersion].contains(&e.kind()) => {
             write!(process().stdout().lock(), "{e}")?;
             return Ok(utils::ExitCode(0));
         }

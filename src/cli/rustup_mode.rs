@@ -10,6 +10,7 @@ use clap::{
     Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueEnum,
 };
 use clap_complete::Shell;
+use itertools::Itertools;
 
 use crate::{
     cli::{
@@ -1334,11 +1335,26 @@ fn target_remove(cfg: &Cfg, m: &ArgMatches) -> Result<utils::ExitCode> {
     let distributable = DistributableToolchain::try_from(&toolchain)?;
 
     for target in m.get_many::<String>("target").unwrap() {
-        let new_component = Component::new(
-            "rust-std".to_string(),
-            Some(TargetTriple::new(target)),
-            false,
-        );
+        let target = TargetTriple::new(target);
+        let default_target = cfg.get_default_host_triple()?;
+        if target == default_target {
+            warn!("after removing the default host target, proc-macros and build scripts might no longer build");
+        }
+        // Whether we have at most 1 component target that is not `None` (wildcard).
+        let has_at_most_one_target = distributable
+            .components()?
+            .into_iter()
+            .filter_map(|c| match (c.installed, c.component.target) {
+                (true, Some(t)) => Some(t),
+                _ => None,
+            })
+            .unique()
+            .at_most_one()
+            .is_ok();
+        if has_at_most_one_target {
+            warn!("after removing the last target, no build targets will be available");
+        }
+        let new_component = Component::new("rust-std".to_string(), Some(target), false);
         distributable.remove_component(new_component)?;
     }
 

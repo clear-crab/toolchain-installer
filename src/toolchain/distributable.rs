@@ -10,7 +10,7 @@ use crate::{
     dist::{
         config::Config,
         dist::{Profile, ToolchainDesc},
-        manifest::{Component, Manifest},
+        manifest::{Component, ComponentStatus, Manifest},
         manifestation::{Changes, Manifestation},
         prefix::InstallPrefix,
     },
@@ -113,6 +113,13 @@ impl<'a> DistributableToolchain<'a> {
         )?;
 
         Ok(())
+    }
+
+    pub(crate) fn components(&self) -> anyhow::Result<Vec<ComponentStatus>> {
+        let manifestation = self.get_manifestation()?;
+        let config = manifestation.read_config()?.unwrap_or_default();
+        let manifest = self.get_manifest()?;
+        manifest.query_components(self.desc(), &config)
     }
 
     /// Are all the components installed in this distribution
